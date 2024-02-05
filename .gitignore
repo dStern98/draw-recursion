@@ -1,0 +1,7 @@
+*.pyc
+*venv
+*cache
+
+html_playground.html
+htmlreports/
+
