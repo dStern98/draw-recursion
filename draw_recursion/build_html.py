@@ -1,6 +1,8 @@
 import os
 from dataclasses import dataclass
 from typing import Any
+import re
+import glob
 
 HTML_TEMPLATE = """
 <html>
@@ -109,6 +111,10 @@ HTML_TEMPLATE = """
 
 @dataclass
 class ProcessedRecursiveCall:
+    """
+    Class representing the final values recorded for
+    a recursive function call.
+    """
     fn_name: str
     runtime_seconds: float
     total_fn_calls: int
@@ -118,24 +124,53 @@ class ProcessedRecursiveCall:
     uncaught_exception: str | None
     dot_graph: str
 
+    def write_to_stdout(self):
+        """
+        Prints a message to stdout about the results of the recursive
+        function call.
+        """
+
+        print("\n", "=" * 50)
+        if not self.uncaught_exception:
+            print(
+                f"{self.first_fn_call} successfully completed in {self.runtime_seconds}s.\n"
+                f"Return Value: {self.return_value}\n"
+                f"Max recursion depth: {self.max_recursion_depth}")
+        else:
+            print(
+                f"{self.first_fn_call} failed with uncaught exception: {self.uncaught_exception}")
+        print("=" * 50)
+
     def write_html_file(self):
+        """
+        Write the HTML file to a folder either named for the 
+        """
         dir_path = os.path.realpath(os.path.join(
             os.path.dirname(__file__), "..", "htmlreports"))
         if not os.path.isdir(dir_path):
             os.mkdir(dir_path)
 
-        html_file = (
-            HTML_TEMPLATE
-            .replace("{graph_dot_string}", self.dot_graph)
-            .replace("{function_call}", self.first_fn_call)
-            .replace("{total_recursive_calls}", str(self.total_fn_calls))
-            .replace("{max_recursion_depth}", str(self.max_recursion_depth))
-            .replace("{function_outcome}", "Successfully Returned" if
-                     self.uncaught_exception is None else f"Uncaught Exception: {self.uncaught_exception}")
-            .replace("{total_function_runtime}", str(round(self.runtime_seconds, 6)))
-            .replace("{function_return_value}", str(self.return_value))
-        )
+        replacements = {
+            "{graph_dot_string}": self.dot_graph,
+            "{function_call}": self.first_fn_call,
+            "{total_recursive_calls}": str(self.total_fn_calls),
+            "{max_recursion_depth}": str(self.max_recursion_depth),
+            "{function_outcome}": "Successfully Returned" if
+            self.uncaught_exception is None else f"{self.uncaught_exception}",
+            "{total_function_runtime}": str(round(self.runtime_seconds, 6)),
+            "{function_return_value}": str(self.return_value)
+        }
 
-        full_file_path = os.path.join(dir_path, f"{self.fn_name}.html")
+        # How many of this functions HTML files are already in the folder.
+        preexisting_files_count = len(glob.glob(
+            os.path.join(dir_path, f"{self.fn_name}*.html")))
+
+        # Use Regex to efficiently replace the HTML String
+        rep = {re.escape(k): v for k, v in replacements.items()}
+        pattern = re.compile("|".join(rep.keys()))
+        html = pattern.sub(lambda m: rep[re.escape(m.group(0))], HTML_TEMPLATE)
+
+        full_file_path = os.path.join(
+            dir_path, f"{self.fn_name}_v{preexisting_files_count + 1}.html")
         with open(full_file_path, "w") as file:
-            file.write(html_file)
+            file.write(html)

@@ -1,34 +1,42 @@
-from typing import Callable
+from collections.abc import Callable, Iterable
 from collections import deque
-from .build_html import ProcessedRecursiveCall
 import time
-from typing import Any, Literal
+from typing import Any
 from functools import wraps
+from typing_extensions import Annotated, Doc
+
+from .build_html import ProcessedRecursiveCall
 
 
-def stringify(value: Any) -> str:
-    value = str(value)
-    if len(value) < 10:
-        return value
-    return value[:10]
+class ExceptionDuringRecursion(Exception):
+    ...
 
 
-class TrackedFunc:
-    call_ledger: list["TrackedFunc"] = []
-    virtual_call_stack: list["TrackedFunc"] = []
+class TrackedFn:
+    """
+    The core class that keeps track of the recursive calls.
+
+    Each `TrackedFn` instance represents a single function call.
+    The shared state between recursive calls in maintained by the class attributes
+    `call_ledger`, `virtual_call_stack`, and `func_start_time`
+    """
+    call_ledger: list["TrackedFn"] = []
+    virtual_call_stack: list["TrackedFn"] = []
     func_start_time: float | None = None
 
     def __init__(
             self,
             func: Callable,
+            kwargs_to_ignore: Iterable[str] | None = None,
             *args,
             **kwargs):
         self.func = func
         self.return_value: Any = "!"
         self.args = args
         self.kwargs = kwargs
-        self.child_calls: list["TrackedFunc"] = []
-        self.func_call = f"{self.func.__name__}({self.args_as_str}{self})"
+        self.kwargs_to_ignore = tuple(
+            kwargs_to_ignore) if kwargs_to_ignore is not None else tuple()
+        self.child_calls: list["TrackedFn"] = []
         self.parent_caller = None
         self.uncaught_exception = None
         self.depth = 0 if not self.virtual_call_stack else self.virtual_call_stack[-1].depth + 1
@@ -36,13 +44,13 @@ class TrackedFunc:
 
     @property
     def args_as_str(self):
-        return ",".join((stringify(arg)
+        return ",".join((repr(arg)
                          for arg in self.args)) if self.args else ""
 
     @property
     def kwargs_as_str(self):
-        return ",".join((f"{str(key)}={stringify(value)}")
-                        for key, value in self.kwargs.items())
+        return ",".join((f"{key}={repr(value)}")
+                        for key, value in self.kwargs.items() if key not in self.kwargs_to_ignore)
 
     @property
     def args_kwargs_sep(self):
@@ -61,9 +69,11 @@ class TrackedFunc:
 
     def __call__(
             self,
-            fn_alias: str | None = None,
-            report_to_stdout: Literal["summary", "verbose", "none"] = "none",
-            generate_html_report: bool = True
+            report_to_stdout: Annotated[bool, Doc(
+                "Whether the funcion results should be printed to stdout"
+            )] = False,
+            generate_html_report: Annotated[bool, Doc(
+                "Whether or not the HTML file should be created.")] = True
     ):
         """
         Execute the decorated callable, tracking all desired information.
@@ -91,25 +101,29 @@ class TrackedFunc:
         try:
             self.return_value = self.func(*self.args, **self.kwargs)
         except Exception as exc:
-            self.uncaught_exception = exc
-            if len(self.virtual_call_stack) > 1:
-                raise exc
-        finally:
-            # Remove self from the virtual_call_stack
-            self.virtual_call_stack.pop()
+            self.uncaught_exception = (
+                ExceptionDuringRecursion(
+                    f"{exc} at depth {self.depth} caused by call: {str(self)}")
+                if not isinstance(exc, ExceptionDuringRecursion) else exc)
+
+        # Remove self from the virtual_call_stack
+        self.virtual_call_stack.pop()
 
         # If the virtual_call_stack is empty, then this self is the first function call
         # and we have a responsibility to process the results
         # and dump the contents to a file before returning.
         if len(self.virtual_call_stack) == 0:
-            self.__class__.process_results_and_cleanup()
+            self.__class__.process_results_and_cleanup(
+                print_to_stdout=report_to_stdout,
+                build_html_file=generate_html_report
+            )
 
         if self.uncaught_exception is not None:
             raise self.uncaught_exception
         return self.return_value
 
     @classmethod
-    def build_dot_string(cls) -> str:
+    def build_dot_graph_string(cls) -> str:
         """
         Use the content from the `call_ledger` and build a dot graph string.
 
@@ -143,10 +157,13 @@ class TrackedFunc:
 
     @classmethod
     def into_processed_call(cls) -> ProcessedRecursiveCall:
-        # Write the processed results to an HTML file.
+        """
+        Convert the contents of the `call_ledger` into an instance of the `ProcessedRecursiveCall` class.
+        """
         if cls.func_start_time is None:
             raise RuntimeError(
                 "Runtime timer was set to None during analysis.")
+        # Note the total function runtime
         total_fn_runtime = time.perf_counter() - cls.func_start_time
         if not cls.call_ledger:
             raise RuntimeError(
@@ -158,14 +175,18 @@ class TrackedFunc:
             total_fn_calls=len(cls.call_ledger),
             max_recursion_depth=max((call.depth for call in cls.call_ledger)),
             first_fn_call=str(base_fn_call),
-            dot_graph=cls.build_dot_string(),
+            dot_graph=cls.build_dot_graph_string(),
             uncaught_exception=str(
                 base_fn_call.uncaught_exception) if base_fn_call.uncaught_exception else None,
             return_value=base_fn_call.return_value
         )
 
     @classmethod
-    def process_results_and_cleanup(cls):
+    def process_results_and_cleanup(
+        cls,
+        print_to_stdout: bool,
+        build_html_file: bool
+    ):
         """
         Write the results to an HTML file and clear the ledger.
 
@@ -175,23 +196,35 @@ class TrackedFunc:
         already be empty when this method is invoked, but just as a precaution, clear it anyway.
         """
         processed_call = cls.into_processed_call()
-        processed_call.write_html_file()
+        if build_html_file:
+            processed_call.write_html_file()
+        if print_to_stdout:
+            processed_call.write_to_stdout()
 
         # Clear both ledger an virtual_call_stack lists.
         cls.call_ledger.clear()
         cls.virtual_call_stack.clear()
         cls.func_start_time = None
-        assert len(cls.call_ledger) == 0
-        assert len(cls.virtual_call_stack) == 0
 
 
 def track_recursion(
-        report_to_stdout: Literal["summary", "verbose", "none"] = "none",
-        fn_alias: str | None = None,
-        generate_html_report: bool = True):
+        generate_stdout_report: bool = False,
+        generate_html_report: bool = True,
+        kwargs_to_ignore: Iterable[str] | None = None):
+    """
+    Decorator factory that can be used to generate an HTML 
+    file visualizing the tree of a recursive function.
+    """
     def wrapper(fn: Callable):
         @wraps(fn)
         def inner(*args, **kwargs):
-            return TrackedFunc(fn, *args, **kwargs)()
+            return TrackedFn(
+                fn,
+                kwargs_to_ignore,
+                *args,
+                **kwargs)(
+                generate_stdout_report,
+                generate_html_report
+            )
         return inner
     return wrapper

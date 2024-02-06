@@ -1,0 +1,244 @@
+
+<html>
+
+<head>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
+    <style type="text/css">
+        #mynetwork {
+            margin: 5px;
+            margin-left: 5%;
+            margin-right: 5%;
+            width: 90%;
+            height: 80%;
+            border: 1px solid lightgray;
+        }
+
+        .top-container {
+            height: 18%;
+            margin-left: 5%;
+            margin-right: 5%;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            border: 1px solid lightgray;
+        }
+
+        .metadata-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .metadata-label {
+            font-size: small;
+        }
+
+        .metadata-value {
+            font-size: large;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-container">
+        <div class="metadata-box">
+            <span class="metadata-label">First Fn Call</span>
+            <span class="metadata-value">grid_traveler(5,5)=> 126</span>
+        </div>
+        <div class="metadata-box">
+            <span class="metadata-label">Total Fn Calls</span>
+            <span class="metadata-value">71</span>
+        </div>
+        <div class="metadata-box">
+            <span class="metadata-label">Function Outcome</span>
+            <span class="metadata-value">Successfully Returned</span>
+        </div>
+        <div class="metadata-box">
+            <span class="metadata-label">Return Value</span>
+            <span class="metadata-value">126</span>
+        </div>
+        <div class="metadata-box">
+            <span class="metadata-label">Max Recursion Depth</span>
+            <span class="metadata-value">11</span>
+        </div>
+        <div class="metadata-box">
+            <span class="metadata-label">Total Runtime</span>
+            <span class="metadata-value">0.000183s</span>
+        </div>
+    </div>
+    <div id="mynetwork"></div>
+
+    <script type="text/javascript">
+        var DOTstring = `digraph graphname {
+ 1 [label="grid_traveler(5,5)=> 126" color=orange];
+2 [label="grid_traveler(4,5)=> 70" color=orange];
+3 [label="grid_traveler(3,5)=> 35" color=orange];
+4 [label="grid_traveler(2,5)=> 15" color=orange];
+5 [label="grid_traveler(1,5)=> 5" color=orange];
+6 [label="grid_traveler(0,5)=> 1" color=orange];
+7 [label="grid_traveler(-1,5)=> 0" color=lightgreen];
+8 [label="grid_traveler(0,4)=> 1" color=orange];
+9 [label="grid_traveler(-1,4)=> 0" color=lightgreen];
+10 [label="grid_traveler(0,3)=> 1" color=orange];
+11 [label="grid_traveler(-1,3)=> 0" color=lightgreen];
+12 [label="grid_traveler(0,2)=> 1" color=orange];
+13 [label="grid_traveler(-1,2)=> 0" color=lightgreen];
+14 [label="grid_traveler(0,1)=> 1" color=lightgreen];
+15 [label="grid_traveler(1,4)=> 4" color=orange];
+16 [label="grid_traveler(0,4)=> 1" color=lightgreen];
+17 [label="grid_traveler(1,3)=> 3" color=orange];
+18 [label="grid_traveler(0,3)=> 1" color=lightgreen];
+19 [label="grid_traveler(1,2)=> 2" color=orange];
+20 [label="grid_traveler(0,2)=> 1" color=lightgreen];
+21 [label="grid_traveler(1,1)=> 1" color=orange];
+22 [label="grid_traveler(0,1)=> 1" color=lightgreen];
+23 [label="grid_traveler(1,0)=> 0" color=orange];
+24 [label="grid_traveler(0,0)=> 0" color=orange];
+25 [label="grid_traveler(-1,0)=> 0" color=lightgreen];
+26 [label="grid_traveler(0,-1)=> 0" color=lightgreen];
+27 [label="grid_traveler(1,-1)=> 0" color=lightgreen];
+28 [label="grid_traveler(2,4)=> 10" color=orange];
+29 [label="grid_traveler(1,4)=> 4" color=lightgreen];
+30 [label="grid_traveler(2,3)=> 6" color=orange];
+31 [label="grid_traveler(1,3)=> 3" color=lightgreen];
+32 [label="grid_traveler(2,2)=> 3" color=orange];
+33 [label="grid_traveler(1,2)=> 2" color=lightgreen];
+34 [label="grid_traveler(2,1)=> 1" color=orange];
+35 [label="grid_traveler(1,1)=> 1" color=lightgreen];
+36 [label="grid_traveler(2,0)=> 0" color=orange];
+37 [label="grid_traveler(1,0)=> 0" color=lightgreen];
+38 [label="grid_traveler(2,-1)=> 0" color=lightgreen];
+39 [label="grid_traveler(3,4)=> 20" color=orange];
+40 [label="grid_traveler(2,4)=> 10" color=lightgreen];
+41 [label="grid_traveler(3,3)=> 10" color=orange];
+42 [label="grid_traveler(2,3)=> 6" color=lightgreen];
+43 [label="grid_traveler(3,2)=> 4" color=orange];
+44 [label="grid_traveler(2,2)=> 3" color=lightgreen];
+45 [label="grid_traveler(3,1)=> 1" color=orange];
+46 [label="grid_traveler(2,1)=> 1" color=lightgreen];
+47 [label="grid_traveler(3,0)=> 0" color=orange];
+48 [label="grid_traveler(2,0)=> 0" color=lightgreen];
+49 [label="grid_traveler(3,-1)=> 0" color=lightgreen];
+50 [label="grid_traveler(4,4)=> 35" color=orange];
+51 [label="grid_traveler(3,4)=> 20" color=lightgreen];
+52 [label="grid_traveler(4,3)=> 15" color=orange];
+53 [label="grid_traveler(3,3)=> 10" color=lightgreen];
+54 [label="grid_traveler(4,2)=> 5" color=orange];
+55 [label="grid_traveler(3,2)=> 4" color=lightgreen];
+56 [label="grid_traveler(4,1)=> 1" color=orange];
+57 [label="grid_traveler(3,1)=> 1" color=lightgreen];
+58 [label="grid_traveler(4,0)=> 0" color=orange];
+59 [label="grid_traveler(3,0)=> 0" color=lightgreen];
+60 [label="grid_traveler(4,-1)=> 0" color=lightgreen];
+61 [label="grid_traveler(5,4)=> 56" color=orange];
+62 [label="grid_traveler(4,4)=> 35" color=lightgreen];
+63 [label="grid_traveler(5,3)=> 21" color=orange];
+64 [label="grid_traveler(4,3)=> 15" color=lightgreen];
+65 [label="grid_traveler(5,2)=> 6" color=orange];
+66 [label="grid_traveler(4,2)=> 5" color=lightgreen];
+67 [label="grid_traveler(5,1)=> 1" color=orange];
+68 [label="grid_traveler(4,1)=> 1" color=lightgreen];
+69 [label="grid_traveler(5,0)=> 0" color=orange];
+70 [label="grid_traveler(4,0)=> 0" color=lightgreen];
+71 [label="grid_traveler(5,-1)=> 0" color=lightgreen];
+1 -> 2;
+1 -> 61;
+2 -> 3;
+2 -> 50;
+61 -> 62;
+61 -> 63;
+3 -> 4;
+3 -> 39;
+50 -> 51;
+50 -> 52;
+63 -> 64;
+63 -> 65;
+4 -> 5;
+4 -> 28;
+39 -> 40;
+39 -> 41;
+52 -> 53;
+52 -> 54;
+65 -> 66;
+65 -> 67;
+5 -> 6;
+5 -> 15;
+28 -> 29;
+28 -> 30;
+41 -> 42;
+41 -> 43;
+54 -> 55;
+54 -> 56;
+67 -> 68;
+67 -> 69;
+6 -> 7;
+6 -> 8;
+15 -> 16;
+15 -> 17;
+30 -> 31;
+30 -> 32;
+43 -> 44;
+43 -> 45;
+56 -> 57;
+56 -> 58;
+69 -> 70;
+69 -> 71;
+8 -> 9;
+8 -> 10;
+17 -> 18;
+17 -> 19;
+32 -> 33;
+32 -> 34;
+45 -> 46;
+45 -> 47;
+58 -> 59;
+58 -> 60;
+10 -> 11;
+10 -> 12;
+19 -> 20;
+19 -> 21;
+34 -> 35;
+34 -> 36;
+47 -> 48;
+47 -> 49;
+12 -> 13;
+12 -> 14;
+21 -> 22;
+21 -> 23;
+36 -> 37;
+36 -> 38;
+23 -> 24;
+23 -> 27;
+24 -> 25;
+24 -> 26;
+}`;
+        var parsedData = vis.parseDOTNetwork(DOTstring);
+
+        var data = {
+            nodes: parsedData.nodes,
+            edges: parsedData.edges
+        }
+        // create a network
+        var container = document.getElementById('mynetwork');
+
+        var options = parsedData.options;
+
+
+        // you can extend the options like a normal JSON variable:
+        options.layout = {
+            hierarchical: {
+                direction: "UD",
+                sortMethod: "directed"
+            },
+        };
+
+        // create a network
+        var network = new vis.Network(container, data, options);
+
+    </script>
+</body>
+
+</html>
