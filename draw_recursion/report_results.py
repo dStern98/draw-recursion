@@ -2,7 +2,11 @@ import os
 from dataclasses import dataclass
 from typing import Any
 import re
+import shutil
 import glob
+from colorama import just_fix_windows_console, Fore, Style
+
+just_fix_windows_console()
 
 HTML_TEMPLATE = """
 <html>
@@ -124,22 +128,41 @@ class ProcessedRecursiveCall:
     uncaught_exception: str | None
     dot_graph: str
 
-    def write_to_stdout(self):
+    def get_boundary_printout(self) -> str:
+        """
+        Build the top printout for each recursive report.
+
+        If the function successfully returned, then the printout is green.
+        It will be red if the function raised an Exception.
+        """
+        terminal_size = shutil.get_terminal_size()
+        if not self.uncaught_exception:
+            boundary_colors = Fore.GREEN
+            message = f" {self.first_fn_call} successfully returned in {round(self.runtime_seconds, 4)}s "
+        else:
+            boundary_colors = Fore.RED
+            message = f" {self.first_fn_call} failed "
+
+        equals_to_print = "=" * ((terminal_size.columns - len(message)) // 2)
+
+        return f"{boundary_colors}{equals_to_print}{message}{equals_to_print}{Style.RESET_ALL}"
+
+    def report_to_stdout(self):
         """
         Prints a message to stdout about the results of the recursive
         function call.
         """
-
-        print("\n", "=" * 50)
+        boundary_printout = self.get_boundary_printout()
+        print()
+        print(boundary_printout)
         if not self.uncaught_exception:
             print(
-                f"{self.first_fn_call} successfully completed in {self.runtime_seconds}s.\n"
                 f"Return Value: {self.return_value}\n"
-                f"Max recursion depth: {self.max_recursion_depth}")
+                f"Max Recursion Depth: {self.max_recursion_depth}\n"
+                f"Total Recursive Calls: {self.total_fn_calls}")
         else:
             print(
                 f"{self.first_fn_call} failed with uncaught exception: {self.uncaught_exception}")
-        print("=" * 50)
 
     def write_html_file(self):
         """

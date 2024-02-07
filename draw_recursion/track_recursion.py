@@ -5,7 +5,7 @@ from typing import Any
 from functools import wraps
 from typing_extensions import Annotated, Doc
 
-from .build_html import ProcessedRecursiveCall
+from .report_results import ProcessedRecursiveCall
 
 
 class ExceptionDuringRecursion(Exception):
@@ -59,7 +59,7 @@ class TrackedFn:
     def __str__(self):
         return (
             f"{self.func.__name__}({self.args_as_str}{self.args_kwargs_sep}{self.kwargs_as_str})"
-            f"=> {self.return_value}"
+            f"-> {self.return_value}"
         )
 
     def __repr__(self):
@@ -73,7 +73,8 @@ class TrackedFn:
                 "Whether the funcion results should be printed to stdout"
             )] = False,
             generate_html_report: Annotated[bool, Doc(
-                "Whether or not the HTML file should be created.")] = True
+                "Whether or not the HTML file should be created."
+            )] = True
     ):
         """
         Execute the decorated callable, tracking all desired information.
@@ -199,7 +200,7 @@ class TrackedFn:
         if build_html_file:
             processed_call.write_html_file()
         if print_to_stdout:
-            processed_call.write_to_stdout()
+            processed_call.report_to_stdout()
 
         # Clear both ledger an virtual_call_stack lists.
         cls.call_ledger.clear()
@@ -208,8 +209,8 @@ class TrackedFn:
 
 
 def track_recursion(
-        generate_stdout_report: bool = False,
-        generate_html_report: bool = True,
+        report_stdout: bool = False,
+        report_html: bool = True,
         kwargs_to_ignore: Iterable[str] | None = None):
     """
     Decorator factory that can be used to generate an HTML 
@@ -223,8 +224,8 @@ def track_recursion(
                 kwargs_to_ignore,
                 *args,
                 **kwargs)(
-                generate_stdout_report,
-                generate_html_report
+                report_stdout,
+                report_html
             )
         return inner
     return wrapper
