@@ -19,7 +19,7 @@ An easy usage example is as follows:
 @track_recursion()
 def fast_exp(n: int, exp: int):
     """
-    Efficient recursive function for computing exponentionals
+    Efficient recursive function for computing exponentials
     by exploiting the fact that n**exp == (n**exp/2) ** 2
     """
     if exp == 1:
@@ -33,7 +33,8 @@ def fast_exp(n: int, exp: int):
 fast_exp(5,7)
 ```
 
-After the function is run, a file at `./htmlreports/fast_exp_v1.html` will have been created, which will looke like this:
+After the function is run, a file at `./htmlreports/fast_exp_v1.html` will have been created, which will look like this:
+
 ![Fast Exponential Screenshot](./examples/fast_exp_screenshot.png)
 
 ---

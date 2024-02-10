@@ -8,109 +8,11 @@ from colorama import just_fix_windows_console, Fore, Style
 
 just_fix_windows_console()
 
-HTML_TEMPLATE = """
-<html>
+PATH_TO_HTML_TEMPLATE = os.path.join(
+    os.path.dirname(__file__), "template.html")
 
-<head>
-    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-
-    <style type="text/css">
-        #mynetwork {
-            margin: 5px;
-            margin-left: 5%;
-            margin-right: 5%;
-            width: 90%;
-            height: 80%;
-            border: 1px solid lightgray;
-        }
-
-        .top-container {
-            height: 18%;
-            margin-left: 5%;
-            margin-right: 5%;
-            display: flex;
-            flex-direction: row;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            border: 1px solid lightgray;
-        }
-
-        .metadata-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .metadata-label {
-            font-size: small;
-        }
-
-        .metadata-value {
-            font-size: large;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="top-container">
-        <div class="metadata-box">
-            <span class="metadata-label">First Fn Call</span>
-            <span class="metadata-value">{function_call}</span>
-        </div>
-        <div class="metadata-box">
-            <span class="metadata-label">Total Fn Calls</span>
-            <span class="metadata-value">{total_recursive_calls}</span>
-        </div>
-        <div class="metadata-box">
-            <span class="metadata-label">Function Outcome</span>
-            <span class="metadata-value">{function_outcome}</span>
-        </div>
-        <div class="metadata-box">
-            <span class="metadata-label">Return Value</span>
-            <span class="metadata-value">{function_return_value}</span>
-        </div>
-        <div class="metadata-box">
-            <span class="metadata-label">Max Recursion Depth</span>
-            <span class="metadata-value">{max_recursion_depth}</span>
-        </div>
-        <div class="metadata-box">
-            <span class="metadata-label">Total Runtime</span>
-            <span class="metadata-value">{total_function_runtime}s</span>
-        </div>
-    </div>
-    <div id="mynetwork"></div>
-
-    <script type="text/javascript">
-        var DOTstring = `{graph_dot_string}`;
-        var parsedData = vis.parseDOTNetwork(DOTstring);
-
-        var data = {
-            nodes: parsedData.nodes,
-            edges: parsedData.edges
-        }
-        // create a network
-        var container = document.getElementById('mynetwork');
-
-        var options = parsedData.options;
-
-
-        // you can extend the options like a normal JSON variable:
-        options.layout = {
-            hierarchical: {
-                direction: "UD",
-                sortMethod: "directed"
-            },
-        };
-
-        // create a network
-        var network = new vis.Network(container, data, options);
-
-    </script>
-</body>
-
-</html>
-"""
+with open(PATH_TO_HTML_TEMPLATE, "r") as file:
+    HTML_TEMPLATE = file.read()
 
 
 @dataclass
@@ -153,13 +55,11 @@ class ProcessedRecursiveCall:
         function call.
         """
         boundary_printout = self.get_boundary_printout()
-        print()
-        print(boundary_printout)
+        print("\n", boundary_printout)
         if not self.uncaught_exception:
-            print(
-                f"Return Value: {self.return_value}\n"
-                f"Max Recursion Depth: {self.max_recursion_depth}\n"
-                f"Total Recursive Calls: {self.total_fn_calls}")
+            print(f"Return Value: {self.return_value}")
+            print(f"Max Recursion Depth: {self.max_recursion_depth}")
+            print(f"Total Recursive Calls: {self.total_fn_calls}")
         else:
             print(
                 f"{self.first_fn_call} failed with uncaught exception: {self.uncaught_exception}")
@@ -188,7 +88,8 @@ class ProcessedRecursiveCall:
         preexisting_files_count = len(glob.glob(
             os.path.join(dir_path, f"{self.fn_name}*.html")))
 
-        # Use Regex to efficiently replace the HTML String
+        # Use Regex to efficiently replace the HTML String, rather than
+        # just change the replacements.
         rep = {re.escape(k): v for k, v in replacements.items()}
         pattern = re.compile("|".join(rep.keys()))
         html = pattern.sub(lambda m: rep[re.escape(m.group(0))], HTML_TEMPLATE)
