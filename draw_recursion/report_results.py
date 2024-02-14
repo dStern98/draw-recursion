@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from typing import Any
 import re
 import shutil
-import glob
 from colorama import just_fix_windows_console, Fore, Style
+from pathvalidate import sanitize_filename
 
 just_fix_windows_console()
 
@@ -46,7 +46,6 @@ class ProcessedRecursiveCall:
             message = f" {self.first_fn_call} failed "
 
         equals_to_print = "=" * ((terminal_size.columns - len(message)) // 2)
-
         return f"{boundary_colors}{equals_to_print}{message}{equals_to_print}{Style.RESET_ALL}"
 
     def report_to_stdout(self):
@@ -55,7 +54,7 @@ class ProcessedRecursiveCall:
         function call.
         """
         boundary_printout = self.get_boundary_printout()
-        print("\n", boundary_printout)
+        print("\n", boundary_printout, sep="")
         if not self.uncaught_exception:
             print(f"Return Value: {self.return_value}")
             print(f"Max Recursion Depth: {self.max_recursion_depth}")
@@ -64,15 +63,11 @@ class ProcessedRecursiveCall:
             print(
                 f"{self.first_fn_call} failed with uncaught exception: {self.uncaught_exception}")
 
-    def write_html_file(self):
+    def generate_html_content(self) -> str:
         """
-        Write the HTML file to a folder either named for the 
+        Use regex to take the HTML template and create a final 
+        HTML file.
         """
-        dir_path = os.path.realpath(os.path.join(
-            os.path.dirname(__file__), "..", "htmlreports"))
-        if not os.path.isdir(dir_path):
-            os.mkdir(dir_path)
-
         replacements = {
             "{graph_dot_string}": self.dot_graph,
             "{function_call}": self.first_fn_call,
@@ -84,17 +79,31 @@ class ProcessedRecursiveCall:
             "{function_return_value}": str(self.return_value)
         }
 
-        # How many of this functions HTML files are already in the folder.
-        preexisting_files_count = len(glob.glob(
-            os.path.join(dir_path, f"{self.fn_name}*.html")))
-
         # Use Regex to efficiently replace the HTML String, rather than
         # just change the replacements.
         rep = {re.escape(k): v for k, v in replacements.items()}
         pattern = re.compile("|".join(rep.keys()))
-        html = pattern.sub(lambda m: rep[re.escape(m.group(0))], HTML_TEMPLATE)
+        return pattern.sub(lambda m: rep[re.escape(m.group(0))], HTML_TEMPLATE)
+
+    def write_html_file(self):
+        """
+        Write the HTML file out in the `htmlreports` directory.
+        Currently, this will overwrite any existing file in the directory
+        already of the same function invocation. 
+        """
+        dir_path = os.path.realpath(os.path.join(
+            os.path.dirname(__file__), "..", "htmlreports"))
+        if not os.path.isdir(dir_path):
+            os.mkdir(dir_path)
+
+        html = self.generate_html_content()
+        # Get the function invocation only (not the return content)
+        # So `factorial(0) -> 1` should just be `factorial(0)`
+        func_invocation, _ = self.first_fn_call.split("->")
+        sanitized_filename = sanitize_filename(
+            func_invocation.strip(), replacement_text="_")
 
         full_file_path = os.path.join(
-            dir_path, f"{self.fn_name}_v{preexisting_files_count + 1}.html")
+            dir_path, f"{sanitized_filename}.html")
         with open(full_file_path, "w") as file:
             file.write(html)

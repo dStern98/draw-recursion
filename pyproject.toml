@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+
+[project]
+name = "draw-recursion"
+description = "Decorator to easily create HTML files drawing recursive call trees."
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+authors = [
+    { name = "David Stern"},
+]
+dependencies = [
+    "typing_extensions==4.9.0"
+    "colorama==0.4.6"
+    "pathvalidate>=3.0"
+]
+dynamic = ["version"]
+
+[project.urls]
+Repository = "https://github.com/dStern98/draw-recursion"
+
+[tool.hatch.version]
+path = "fastapi/__init__.py"

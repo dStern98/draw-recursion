@@ -8,7 +8,7 @@ The decorator can then be applied to any recursive function. The decorator will 
 Each `htmlreport` draws the entire call tree of the recursive call, as well as some other metrics such as maximum recursion depth, total runtime, total number of recursive calls, and the final return value.
 The recursive call tree is interactive. If the function failed with an uncaught exception, then the exact depth and call that triggered the exception is recorded in the tree.
 
-Under the hood, the python code builds out a string representing the call tree in DOT language [See here](<https://en.wikipedia.org/wiki/DOT_(graph_description_language)>). The `HTML` file uses [vis.js](https://visjs.org/) to parse the DOT string and build out an interactible graph. Because it uses `HTML` & `JavaScript`, the dependencies required for visualization are essentially zero as long as you have a browser.
+Under the hood, the python code builds out a string representing the call tree in [DOT language](<https://en.wikipedia.org/wiki/DOT_(graph_description_language)>). The `HTML` file uses [vis.js](https://visjs.org/) to parse the DOT string and build out an interactible graph. Because it uses `HTML` & `JavaScript`, the dependencies required for visualization are essentially zero as long as you have a browser.
 
 ## Examples
 
@@ -86,6 +86,4 @@ def track_recursion(
 
 ---
 
-1. I plan to work on allowing animation in the HTML files so that the progression of the calls can be watched like a movie.
-2. More comprehensive tests.
-3. Currently, HTML files are simply named based on the function name, but not the function args and kwargs. Ideally some component of the args and kwargs is part of the file name.
+I plan to work on allowing animation in the HTML files so that the progression of the calls can be watched like a movie in the future. This would just be JavaScript added to the HTML files, not Python.

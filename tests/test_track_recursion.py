@@ -22,29 +22,13 @@ def setup_reports_folder() -> str:
     return path_to_dir
 
 
-@track_recursion()
-def fast_exp(n: int, exp: int):
-    """
-    Efficient recursive function for computing exponentionals
-    by exploiting the fact that n**exp == (n**exp/2) ** 2
-    """
-    if exp == 1:
-        return n
-    if exp % 2 == 0:
-        return fast_exp(n, exp/2) ** 2
-    else:
-        # In the odd case, we need an extra n
-        # to offset the floor divide
-        return n * fast_exp(n, exp//2) ** 2
-
-
 @track_recursion(report_stdout=True)
 def panic():
     """
     Function that randomly panics 25% of the time.
     Infinitely recursive until that panic occurs.
     """
-    if random.randint(0, 3) == 3:
+    if random.randint(0, 25) == 3:
         raise RuntimeError("Panic!")
     panic()
 
@@ -87,13 +71,13 @@ def test_fibonacci(setup_reports_folder):
     html_reports = glob.glob(os.path.join(setup_reports_folder, "*"))
     # After running fib(7), there should be one html file in the htmlreports folder
     assert {os.path.basename(file_name)
-            for file_name in html_reports} == {"fib_v1.html"}
+            for file_name in html_reports} == {"fib(7).html"}
     # After running fib(9), there should be a second html file
     assert fib(9) == 34
     html_reports = glob.glob(os.path.join(setup_reports_folder, "*"))
 
     assert {os.path.basename(file_name) for file_name in html_reports} == {
-        "fib_v1.html", "fib_v2.html"}
+        "fib(7).html", "fib(9).html"}
 
 
 def test_panic(setup_reports_folder):
@@ -105,4 +89,19 @@ def test_panic(setup_reports_folder):
     html_reports = glob.glob(os.path.join(setup_reports_folder, "*"))
     assert len(html_reports) == 1
     assert set((os.path.basename(file_name)
-               for file_name in html_reports)) == {"panic_v1.html"}
+               for file_name in html_reports)) == {"panic().html"}
+
+
+def test_grid_traveler(setup_reports_folder):
+    grid_traveler(25, 25)
+    html_reports = glob.glob(os.path.join(setup_reports_folder, "*"))
+    # After running fib(7), there should be one html file in the htmlreports folder
+    assert {os.path.basename(file_name)
+            for file_name in html_reports} == {"grid_traveler(25,25).html"}
+
+
+def test_grid_traveler_no_dir(setup_reports_folder):
+    if os.path.isdir(setup_reports_folder):
+        os.rmdir(setup_reports_folder)
+
+    grid_traveler(17, 19)
