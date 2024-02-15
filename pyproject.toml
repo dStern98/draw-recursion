@@ -3,21 +3,29 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 
-
 [project]
 name = "draw-recursion"
-description = "Decorator to easily create HTML files drawing recursive call trees."
+description = "Easily create HTML files visualizing recursive call trees."
 readme = "README.md"
 requires-python = ">=3.8"
 license = "MIT"
 authors = [
-    { name = "David Stern"},
+    { name = "David Stern"}
 ]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers"
+]
+
 dependencies = [
-    "typing_extensions==4.9.0"
-    "colorama==0.4.6"
+    "typing_extensions>=4.8.0",
+    "colorama>=0.4.0",
     "pathvalidate>=3.0"
 ]
+
 dynamic = ["version"]
 
 [project.urls]
