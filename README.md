@@ -42,7 +42,7 @@ After the function is run, a file at `./htmlreports/fast_exp_v1.html` will have 
 A second example with a more complex call tree would be
 the classic recursive fibonacci without any memoization:
 
-```
+```python
 @track_recursion(report_stdout=True)
 def fib(n: int):
     """
